@@ -43,7 +43,7 @@ pipeline {
 
 success {
     emailext (
-        to: 'hitendraverma22@gmail.com',
+        to: 'testemail@gmail.com',
         subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """
         <html>
@@ -77,7 +77,7 @@ success {
 
 failure {
     emailext (
-        to: 'hitendraverma22@gmail.com',
+        to: 'testemail@gmail.com',
         subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
         body: """
         <html>
@@ -99,7 +99,7 @@ failure {
 
         <p><b>Please check the logs and take necessary actions.</b></p>
 
-        <p><b>Extent Report (if available):</b> <a href="http://localhost:8080/job/OrangeHRM_Build/HTML_20Extent_20Report/">Click here</a></p>
+        <p><b>Extent Report (if available):</b> <a href="http://localhost:8080/job/OrangeHRM_Pipeline_Job/lastSuccessfulBuild/artifact/src/test/resources/ExtentReport/ExtentReport.html">Click here</a></p>
 
         <p>Best regards,</p>
         <p><b>Automation Team</b></p>
