@@ -2,6 +2,8 @@ package com.orangehrm.base;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -15,9 +17,12 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Parameters;
 import org.testng.asserts.SoftAssert;
 
 import com.orangehrm.actiondriver.ActionDriver;
@@ -33,33 +38,35 @@ public class BaseClass {
 	private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 	private static ThreadLocal<ActionDriver> actionDriver = new ThreadLocal<>();
 	public static final Logger logger = LoggerManager.getLogger(BaseClass.class);
-	
+
 	protected ThreadLocal<SoftAssert> softAssert = ThreadLocal.withInitial(SoftAssert::new);
 
-	//Getter method for soft assert
+	// Getter method for soft assert
 	public SoftAssert getSoftAssert() {
 		return softAssert.get();
 	}
-	
+
 	@BeforeSuite
 	public void loadConfig() throws IOException {
 		// Load the configuration file
 		prop = new Properties();
-		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/src/main/resources/config.properties");
+		FileInputStream fis = new FileInputStream(
+				System.getProperty("user.dir") + "/src/main/resources/config.properties");
 		prop.load(fis);
 		logger.info("config.properties file loaded");
-		
-		//Start the Extent Report
-		//ExtentManager.getReporter();  --This has been implemented in TestListener
+
+		// Start the Extent Report
+		// ExtentManager.getReporter(); --This has been implemented in TestListener
 	}
 
 	@BeforeMethod
-	public synchronized void setup() throws IOException {
+	@Parameters("browser")
+	public synchronized void setup(String browser) throws IOException {
 		System.out.println("Setting up WebDriver for:" + this.getClass().getSimpleName());
-		launchBrowser();
+		launchBrowser(browser);
 		configureBrowser();
 		staticWait(2);
-		//Sample logger message
+		// Sample logger message
 		logger.info("WebDriver Initialized and Browser Maximized");
 		logger.trace("This is a Trace message");
 		logger.error("This is a error message");
@@ -83,9 +90,35 @@ public class BaseClass {
 	/*
 	 * Initialize the WebDriver based on browser defined in config.properties file
 	 */
-	private synchronized void launchBrowser() {
+	private synchronized void launchBrowser(String browser) {
 
-		String browser = prop.getProperty("browser");
+		//String browser = prop.getProperty("browser");
+		
+		boolean seleniumGrid = Boolean.parseBoolean(prop.getProperty("seleniumGrid"));
+		String gridURL = prop.getProperty("gridURL");
+		
+		if (seleniumGrid) {
+		    try {
+		        if (browser.equalsIgnoreCase("chrome")) {
+		            ChromeOptions options = new ChromeOptions();
+		            options.addArguments("--headless", "--disable-gpu", "--window-size=1920,1080");
+		            driver.set(new RemoteWebDriver(new URL(gridURL), options));
+		        } else if (browser.equalsIgnoreCase("firefox")) {
+		            FirefoxOptions options = new FirefoxOptions();
+		            options.addArguments("-headless");
+		            driver.set(new RemoteWebDriver(new URL(gridURL), options));
+		        } else if (browser.equalsIgnoreCase("edge")) {
+		            EdgeOptions options = new EdgeOptions();
+		            options.addArguments("--headless=new", "--disable-gpu","--no-sandbox","--disable-dev-shm-usage");
+		            driver.set(new RemoteWebDriver(new URL(gridURL), options));
+		        } else {
+		            throw new IllegalArgumentException("Browser Not Supported: " + browser);
+		        }
+		        logger.info("RemoteWebDriver instance created for Grid in headless mode");
+		    } catch (MalformedURLException e) {
+		        throw new RuntimeException("Invalid Grid URL", e);
+		    }
+		} else {
 
 		if (browser.equalsIgnoreCase("chrome")) {
 			
@@ -135,6 +168,7 @@ public class BaseClass {
 		} else {
 			throw new IllegalArgumentException("Browser Not Supported:" + browser);
 		}
+		}
 	}
 
 	/*
@@ -172,7 +206,7 @@ public class BaseClass {
 		actionDriver.remove();
 		// driver = null;
 		// actionDriver = null;
-		//ExtentManager.endTest(); --This has been implemented in TestListener
+		// ExtentManager.endTest(); --This has been implemented in TestListener
 	}
 
 	/*
