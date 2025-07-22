@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="OrangeHRMSuite" parallel="tests" thread-count="7">
+<suite name="OrangeHRMSuite" parallel="tests" thread-count="8">
 	<listeners>
 		<listener class-name="com.orangehrm.listeners.TestListener"></listener>
 	</listeners>
 	<test name="OrangeHRMTest_chrome">
 		<parameter name="browser" value="chrome" />
 		<classes>
-			<class name="com.orangehrm.test.DBVerificationTest" />
 			<class name="com.orangehrm.test.ApiTest" />
 		</classes>
 	</test>
@@ -21,6 +20,7 @@
 	<test name="OrangeHRMTest_firefox">
 		<parameter name="browser" value="firefox" />
 		<classes>
+			<class name="com.orangehrm.test.DBVerificationTest" />
 			<class name="com.orangehrm.test.LoginPageTest" />
 			<class name="com.orangehrm.test.HomePageTest" />
 		</classes>
